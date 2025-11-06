@@ -171,6 +171,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 }
 
 
+
+
 /* --- 모터 제어 함수 --- */
 void Car_Forward()
 {
@@ -215,6 +217,7 @@ void Car_Stop()
 
 
 
+
 /* USER CODE END 0 */
 
 /**
@@ -250,6 +253,7 @@ int main(void)
   MX_TIM11_Init();
   MX_USART2_UART_Init();
   MX_TIM4_Init();
+
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim11);   // for delay_us() function
   HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
@@ -299,30 +303,39 @@ int main(void)
             printf("L:%d C:%d R:%d\r\n", distance_Left, distance, distance_Right);
 
             // 기본 속도
-            TIM4->CCR2 = 700;
-            TIM4->CCR3 = 700;
+            TIM4->CCR2 = 900;
+            TIM4->CCR3 = 900;
 
-            if (distance <= 40)
+            if (distance < 40 )
             {
 
                 // 좌우 비교
                 if (distance_Left > distance_Right+10)
                 {
                    TIM4->CCR2 = 500;
-                   TIM4->CCR3 = 700;
+                   TIM4->CCR3 = 900;
                     Car_Left();
                     HAL_Delay(100); // 회전 시간
                     Car_Stop();
                 }
                 else if (distance_Right > distance_Left +10)
                 {
-                   TIM4->CCR2 = 700;
+                   TIM4->CCR2 = 900;
                    TIM4->CCR3 = 500;
                     Car_Right();
                     HAL_Delay(100); // 회전 시간
                     Car_Stop();
                 }
-                else if (distance <= 10 || (distance_Left <=15 || distance_Right <= 15)) // 부딫히면 안돼!
+
+            }
+
+            else
+            {
+                // 장애물 없음 → 전진
+
+                Car_Forward();
+
+                if (distance < 10 || (distance_Left < 10 || distance_Right < 10)) // 부딫히면 안돼!
                 {
                   TIM4->CCR2 = 500;
                   TIM4->CCR3 = 500;
@@ -331,28 +344,20 @@ int main(void)
                   if (distance_Left > distance_Right +10)
                   {
                      TIM4->CCR2 = 500;
-                     TIM4->CCR3 = 700;
+                     TIM4->CCR3 = 900;
                       Car_Left();
                       HAL_Delay(100); // 회전 시간
                       Car_Stop();
                   }
                   else if (distance_Right > distance_Left +10)
                   {
-                     TIM4->CCR2 = 700;
+                     TIM4->CCR2 = 900;
                      TIM4->CCR3 = 500;
                       Car_Right();
                       HAL_Delay(100); // 회전 시간
                       Car_Stop();
                   }
                 }
-            }
-
-
-            else
-            {
-                // 장애물 없음 → 전진
-
-                Car_Forward();
             }
         }
 

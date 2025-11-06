@@ -1039,6 +1039,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 080009c8 <Car_Forward>:
 
 
+
 /* --- 모터 제어 함수 --- */
 void Car_Forward()
 {
@@ -1236,6 +1237,7 @@ int main(void)
  8000b0c:	f000 fc80 	bl	8001410 <MX_USART2_UART_Init>
   MX_TIM4_Init();
  8000b10:	f000 faf0 	bl	80010f4 <MX_TIM4_Init>
+
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim11);   // for delay_us() function
  8000b14:	4873      	ldr	r0, [pc, #460]	@ (8000ce4 <main+0x1f0>)
@@ -1367,20 +1369,20 @@ int main(void)
  8000bd2:	f004 f97b 	bl	8004ecc <iprintf>
 
             // 기본 속도
-            TIM4->CCR2 = 700;
+            TIM4->CCR2 = 900;
  8000bd6:	4b52      	ldr	r3, [pc, #328]	@ (8000d20 <main+0x22c>)
- 8000bd8:	f44f 722f 	mov.w	r2, #700	@ 0x2bc
+ 8000bd8:	f44f 7261 	mov.w	r2, #900	@ 0x384
  8000bdc:	639a      	str	r2, [r3, #56]	@ 0x38
-            TIM4->CCR3 = 700;
+            TIM4->CCR3 = 900;
  8000bde:	4b50      	ldr	r3, [pc, #320]	@ (8000d20 <main+0x22c>)
- 8000be0:	f44f 722f 	mov.w	r2, #700	@ 0x2bc
+ 8000be0:	f44f 7261 	mov.w	r2, #900	@ 0x384
  8000be4:	63da      	str	r2, [r3, #60]	@ 0x3c
 
-            if (distance <= 40)
+            if (distance < 40 )
  8000be6:	4b4b      	ldr	r3, [pc, #300]	@ (8000d14 <main+0x220>)
  8000be8:	781b      	ldrb	r3, [r3, #0]
- 8000bea:	2b28      	cmp	r3, #40	@ 0x28
- 8000bec:	d877      	bhi.n	8000cde <main+0x1ea>
+ 8000bea:	2b27      	cmp	r3, #39	@ 0x27
+ 8000bec:	d82f      	bhi.n	8000c4e <main+0x15a>
             {
 
                 // 좌우 비교
@@ -1398,9 +1400,9 @@ int main(void)
  8000bfe:	4b48      	ldr	r3, [pc, #288]	@ (8000d20 <main+0x22c>)
  8000c00:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
  8000c04:	639a      	str	r2, [r3, #56]	@ 0x38
-                   TIM4->CCR3 = 700;
+                   TIM4->CCR3 = 900;
  8000c06:	4b46      	ldr	r3, [pc, #280]	@ (8000d20 <main+0x22c>)
- 8000c08:	f44f 722f 	mov.w	r2, #700	@ 0x2bc
+ 8000c08:	f44f 7261 	mov.w	r2, #900	@ 0x384
  8000c0c:	63da      	str	r2, [r3, #60]	@ 0x3c
                     Car_Left();
  8000c0e:	f7ff ff17 	bl	8000a40 <Car_Left>
@@ -1419,11 +1421,11 @@ int main(void)
  8000c26:	781b      	ldrb	r3, [r3, #0]
  8000c28:	330a      	adds	r3, #10
  8000c2a:	429a      	cmp	r2, r3
- 8000c2c:	dd0f      	ble.n	8000c4e <main+0x15a>
+ 8000c2c:	dd8e      	ble.n	8000b4c <main+0x58>
                 {
-                   TIM4->CCR2 = 700;
+                   TIM4->CCR2 = 900;
  8000c2e:	4b3c      	ldr	r3, [pc, #240]	@ (8000d20 <main+0x22c>)
- 8000c30:	f44f 722f 	mov.w	r2, #700	@ 0x2bc
+ 8000c30:	f44f 7261 	mov.w	r2, #900	@ 0x384
  8000c34:	639a      	str	r2, [r3, #56]	@ 0x38
                    TIM4->CCR3 = 500;
  8000c36:	4b3a      	ldr	r3, [pc, #232]	@ (8000d20 <main+0x22c>)
@@ -1437,94 +1439,94 @@ int main(void)
                     Car_Stop();
  8000c48:	f7ff ff36 	bl	8000ab8 <Car_Stop>
  8000c4c:	e77e      	b.n	8000b4c <main+0x58>
-                }
-                else if (distance <= 10 || (distance_Left <=15 || distance_Right <= 15)) // 부딫히면 안돼!
- 8000c4e:	4b31      	ldr	r3, [pc, #196]	@ (8000d14 <main+0x220>)
- 8000c50:	781b      	ldrb	r3, [r3, #0]
- 8000c52:	2b0a      	cmp	r3, #10
- 8000c54:	d908      	bls.n	8000c68 <main+0x174>
- 8000c56:	4b2e      	ldr	r3, [pc, #184]	@ (8000d10 <main+0x21c>)
- 8000c58:	781b      	ldrb	r3, [r3, #0]
- 8000c5a:	2b0f      	cmp	r3, #15
- 8000c5c:	d904      	bls.n	8000c68 <main+0x174>
- 8000c5e:	4b2e      	ldr	r3, [pc, #184]	@ (8000d18 <main+0x224>)
- 8000c60:	781b      	ldrb	r3, [r3, #0]
- 8000c62:	2b0f      	cmp	r3, #15
- 8000c64:	f63f af72 	bhi.w	8000b4c <main+0x58>
-                {
-                  TIM4->CCR2 = 500;
- 8000c68:	4b2d      	ldr	r3, [pc, #180]	@ (8000d20 <main+0x22c>)
- 8000c6a:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
- 8000c6e:	639a      	str	r2, [r3, #56]	@ 0x38
-                  TIM4->CCR3 = 500;
- 8000c70:	4b2b      	ldr	r3, [pc, #172]	@ (8000d20 <main+0x22c>)
- 8000c72:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
- 8000c76:	63da      	str	r2, [r3, #60]	@ 0x3c
-                  Car_Backward();
- 8000c78:	f7ff fec4 	bl	8000a04 <Car_Backward>
-
-                  if (distance_Left > distance_Right +10)
- 8000c7c:	4b24      	ldr	r3, [pc, #144]	@ (8000d10 <main+0x21c>)
- 8000c7e:	781b      	ldrb	r3, [r3, #0]
- 8000c80:	461a      	mov	r2, r3
- 8000c82:	4b25      	ldr	r3, [pc, #148]	@ (8000d18 <main+0x224>)
- 8000c84:	781b      	ldrb	r3, [r3, #0]
- 8000c86:	330a      	adds	r3, #10
- 8000c88:	429a      	cmp	r2, r3
- 8000c8a:	dd0f      	ble.n	8000cac <main+0x1b8>
-                  {
-                     TIM4->CCR2 = 500;
- 8000c8c:	4b24      	ldr	r3, [pc, #144]	@ (8000d20 <main+0x22c>)
- 8000c8e:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
- 8000c92:	639a      	str	r2, [r3, #56]	@ 0x38
-                     TIM4->CCR3 = 700;
- 8000c94:	4b22      	ldr	r3, [pc, #136]	@ (8000d20 <main+0x22c>)
- 8000c96:	f44f 722f 	mov.w	r2, #700	@ 0x2bc
- 8000c9a:	63da      	str	r2, [r3, #60]	@ 0x3c
-                      Car_Left();
- 8000c9c:	f7ff fed0 	bl	8000a40 <Car_Left>
-                      HAL_Delay(100); // 회전 시간
- 8000ca0:	2064      	movs	r0, #100	@ 0x64
- 8000ca2:	f000 fccb 	bl	800163c <HAL_Delay>
-                      Car_Stop();
- 8000ca6:	f7ff ff07 	bl	8000ab8 <Car_Stop>
- 8000caa:	e74f      	b.n	8000b4c <main+0x58>
-                  }
-                  else if (distance_Right > distance_Left +10)
- 8000cac:	4b1a      	ldr	r3, [pc, #104]	@ (8000d18 <main+0x224>)
- 8000cae:	781b      	ldrb	r3, [r3, #0]
- 8000cb0:	461a      	mov	r2, r3
- 8000cb2:	4b17      	ldr	r3, [pc, #92]	@ (8000d10 <main+0x21c>)
- 8000cb4:	781b      	ldrb	r3, [r3, #0]
- 8000cb6:	330a      	adds	r3, #10
- 8000cb8:	429a      	cmp	r2, r3
- 8000cba:	f77f af47 	ble.w	8000b4c <main+0x58>
-                  {
-                     TIM4->CCR2 = 700;
- 8000cbe:	4b18      	ldr	r3, [pc, #96]	@ (8000d20 <main+0x22c>)
- 8000cc0:	f44f 722f 	mov.w	r2, #700	@ 0x2bc
- 8000cc4:	639a      	str	r2, [r3, #56]	@ 0x38
-                     TIM4->CCR3 = 500;
- 8000cc6:	4b16      	ldr	r3, [pc, #88]	@ (8000d20 <main+0x22c>)
- 8000cc8:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
- 8000ccc:	63da      	str	r2, [r3, #60]	@ 0x3c
-                      Car_Right();
- 8000cce:	f7ff fed5 	bl	8000a7c <Car_Right>
-                      HAL_Delay(100); // 회전 시간
- 8000cd2:	2064      	movs	r0, #100	@ 0x64
- 8000cd4:	f000 fcb2 	bl	800163c <HAL_Delay>
-                      Car_Stop();
- 8000cd8:	f7ff feee 	bl	8000ab8 <Car_Stop>
- 8000cdc:	e736      	b.n	8000b4c <main+0x58>
 
             else
             {
                 // 장애물 없음 → 전진
 
                 Car_Forward();
- 8000cde:	f7ff fe73 	bl	80009c8 <Car_Forward>
+ 8000c4e:	f7ff febb 	bl	80009c8 <Car_Forward>
+
+                if (distance < 10 || (distance_Left < 10 || distance_Right < 10)) // 부딫히면 안돼!
+ 8000c52:	4b30      	ldr	r3, [pc, #192]	@ (8000d14 <main+0x220>)
+ 8000c54:	781b      	ldrb	r3, [r3, #0]
+ 8000c56:	2b09      	cmp	r3, #9
+ 8000c58:	d908      	bls.n	8000c6c <main+0x178>
+ 8000c5a:	4b2d      	ldr	r3, [pc, #180]	@ (8000d10 <main+0x21c>)
+ 8000c5c:	781b      	ldrb	r3, [r3, #0]
+ 8000c5e:	2b09      	cmp	r3, #9
+ 8000c60:	d904      	bls.n	8000c6c <main+0x178>
+ 8000c62:	4b2d      	ldr	r3, [pc, #180]	@ (8000d18 <main+0x224>)
+ 8000c64:	781b      	ldrb	r3, [r3, #0]
+ 8000c66:	2b09      	cmp	r3, #9
+ 8000c68:	f63f af70 	bhi.w	8000b4c <main+0x58>
+                {
+                  TIM4->CCR2 = 500;
+ 8000c6c:	4b2c      	ldr	r3, [pc, #176]	@ (8000d20 <main+0x22c>)
+ 8000c6e:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
+ 8000c72:	639a      	str	r2, [r3, #56]	@ 0x38
+                  TIM4->CCR3 = 500;
+ 8000c74:	4b2a      	ldr	r3, [pc, #168]	@ (8000d20 <main+0x22c>)
+ 8000c76:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
+ 8000c7a:	63da      	str	r2, [r3, #60]	@ 0x3c
+                  Car_Backward();
+ 8000c7c:	f7ff fec2 	bl	8000a04 <Car_Backward>
+
+                  if (distance_Left > distance_Right +10)
+ 8000c80:	4b23      	ldr	r3, [pc, #140]	@ (8000d10 <main+0x21c>)
+ 8000c82:	781b      	ldrb	r3, [r3, #0]
+ 8000c84:	461a      	mov	r2, r3
+ 8000c86:	4b24      	ldr	r3, [pc, #144]	@ (8000d18 <main+0x224>)
+ 8000c88:	781b      	ldrb	r3, [r3, #0]
+ 8000c8a:	330a      	adds	r3, #10
+ 8000c8c:	429a      	cmp	r2, r3
+ 8000c8e:	dd0f      	ble.n	8000cb0 <main+0x1bc>
+                  {
+                     TIM4->CCR2 = 500;
+ 8000c90:	4b23      	ldr	r3, [pc, #140]	@ (8000d20 <main+0x22c>)
+ 8000c92:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
+ 8000c96:	639a      	str	r2, [r3, #56]	@ 0x38
+                     TIM4->CCR3 = 900;
+ 8000c98:	4b21      	ldr	r3, [pc, #132]	@ (8000d20 <main+0x22c>)
+ 8000c9a:	f44f 7261 	mov.w	r2, #900	@ 0x384
+ 8000c9e:	63da      	str	r2, [r3, #60]	@ 0x3c
+                      Car_Left();
+ 8000ca0:	f7ff fece 	bl	8000a40 <Car_Left>
+                      HAL_Delay(100); // 회전 시간
+ 8000ca4:	2064      	movs	r0, #100	@ 0x64
+ 8000ca6:	f000 fcc9 	bl	800163c <HAL_Delay>
+                      Car_Stop();
+ 8000caa:	f7ff ff05 	bl	8000ab8 <Car_Stop>
+ 8000cae:	e74d      	b.n	8000b4c <main+0x58>
+                  }
+                  else if (distance_Right > distance_Left +10)
+ 8000cb0:	4b19      	ldr	r3, [pc, #100]	@ (8000d18 <main+0x224>)
+ 8000cb2:	781b      	ldrb	r3, [r3, #0]
+ 8000cb4:	461a      	mov	r2, r3
+ 8000cb6:	4b16      	ldr	r3, [pc, #88]	@ (8000d10 <main+0x21c>)
+ 8000cb8:	781b      	ldrb	r3, [r3, #0]
+ 8000cba:	330a      	adds	r3, #10
+ 8000cbc:	429a      	cmp	r2, r3
+ 8000cbe:	f77f af45 	ble.w	8000b4c <main+0x58>
+                  {
+                     TIM4->CCR2 = 900;
+ 8000cc2:	4b17      	ldr	r3, [pc, #92]	@ (8000d20 <main+0x22c>)
+ 8000cc4:	f44f 7261 	mov.w	r2, #900	@ 0x384
+ 8000cc8:	639a      	str	r2, [r3, #56]	@ 0x38
+                     TIM4->CCR3 = 500;
+ 8000cca:	4b15      	ldr	r3, [pc, #84]	@ (8000d20 <main+0x22c>)
+ 8000ccc:	f44f 72fa 	mov.w	r2, #500	@ 0x1f4
+ 8000cd0:	63da      	str	r2, [r3, #60]	@ 0x3c
+                      Car_Right();
+ 8000cd2:	f7ff fed3 	bl	8000a7c <Car_Right>
+                      HAL_Delay(100); // 회전 시간
+ 8000cd6:	2064      	movs	r0, #100	@ 0x64
+ 8000cd8:	f000 fcb0 	bl	800163c <HAL_Delay>
+                      Car_Stop();
+ 8000cdc:	f7ff feec 	bl	8000ab8 <Car_Stop>
     now = HAL_GetTick();
- 8000ce2:	e733      	b.n	8000b4c <main+0x58>
+ 8000ce0:	e734      	b.n	8000b4c <main+0x58>
+ 8000ce2:	bf00      	nop
  8000ce4:	20000144 	.word	0x20000144
  8000ce8:	200000b4 	.word	0x200000b4
  8000cec:	200000fc 	.word	0x200000fc
