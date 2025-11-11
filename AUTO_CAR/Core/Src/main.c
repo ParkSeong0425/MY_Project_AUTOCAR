@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -25,6 +26,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "delay_us.h"
+#include "ultrasonic.h"
+#include "RC_car.h"
 #include  <stdio.h>
 /* USER CODE END Includes */
 
@@ -35,14 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TRIG_CENTER_PORT   GPIOA
-#define TRIG_CENTER_PIN   GPIO_PIN_5
-
-#define TRIG_LEFT_PORT   GPIOB
-#define TRIG_LEFT_PIN   GPIO_PIN_6
-
-#define TRIG_RIGHT_PORT   GPIOA
-#define TRIG_RIGHT_PIN   GPIO_PIN_4
+uint8_t rxData;
 
 /* USER CODE END PD */
 
@@ -59,49 +55,15 @@ int _write(int file, unsigned char* p, int len)
 
 /* USER CODE BEGIN PV */
 
-uint16_t IC_Left1 = 0, IC_Left2 = 0;
-uint16_t IC_Center1 = 0, IC_Center2 = 0;
-uint16_t IC_Right1 = 0, IC_Right2 = 0;
-
-uint8_t captureLeftFlag = 0;
-uint8_t captureCenterFlag = 0;
-uint8_t captureRightFlag = 0;
-
-uint16_t echoTimeLeft = 0, echoTimeCenter = 0, echoTimeRight = 0;
-uint8_t distance_Left = 0, distance = 0, distance_Right = 0;
-uint8_t rxData;
-
-
-/* --- 타이밍 변수 --- */
-uint32_t previous_trigger_time = 0;
-uint32_t now = 0;
-uint8_t sensor_state = 0;
-uint32_t lastDecisionTime = 0;   // 마지막 주행 판단 시각
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-void HCSR04_TRIGGER(GPIO_TypeDef* port, uint16_t pin);
-void Car_Forward(void);
-void Car_Backward(void);
-void Car_Left(void);
-void Car_Right(void);
-void Car_Stop(void);
 
-// 초음파 트리거
-void HCSR04_TRIGGER(GPIO_TypeDef* port, uint16_t pin)
-{
-  HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
-  delay_us(2);
-  HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
-  delay_us(10);
-  HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
 
-  __HAL_TIM_ENABLE_IT(&htim3, TIM_IT_CC1);
-
-}
 
 
 /* USER CODE END PFP */
@@ -170,54 +132,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
    }
 }
 
-
-
-
-/* --- 모터 제어 함수 --- */
-void Car_Forward()
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
-}
-
-void Car_Backward()
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
-}
-
-void Car_Left()
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
-}
-
-void Car_Right()
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
-}
-
-void Car_Stop()
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
-}
-
-
-
-
-
 /* USER CODE END 0 */
 
 /**
@@ -253,7 +167,6 @@ int main(void)
   MX_TIM11_Init();
   MX_USART2_UART_Init();
   MX_TIM4_Init();
-
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim11);   // for delay_us() function
   HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
@@ -265,101 +178,23 @@ int main(void)
   HAL_UART_Receive_IT(&huart2, &rxData, 1);
 
 
+
   /* USER CODE END 2 */
+
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
+  MX_FREERTOS_Init();
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    now = HAL_GetTick();
 
-        /* --- 50ms마다 초음파 트리거 --- */
-        if (now - previous_trigger_time >= 50)
-        {
-            previous_trigger_time = now;
-
-            if (sensor_state == 0)
-            {
-                HCSR04_TRIGGER(TRIG_LEFT_PORT, TRIG_LEFT_PIN);
-                sensor_state = 1;
-            }
-            else if (sensor_state == 1)
-            {
-                HCSR04_TRIGGER(TRIG_CENTER_PORT, TRIG_CENTER_PIN);
-                sensor_state = 2;
-            }
-            else
-            {
-                HCSR04_TRIGGER(TRIG_RIGHT_PORT, TRIG_RIGHT_PIN);
-                sensor_state = 0;
-            }
-        }
-
-        /* --- 100ms마다 주행 판단 --- */
-        if (now - lastDecisionTime >= 100)
-        {
-            lastDecisionTime = now;
-
-            printf("L:%d C:%d R:%d\r\n", distance_Left, distance, distance_Right);
-
-            // 기본 속도
-            TIM4->CCR2 = 900;
-            TIM4->CCR3 = 900;
-
-            if (distance < 40 )
-            {
-
-                // 좌우 비교
-                if (distance_Left > distance_Right+10)
-                {
-                   TIM4->CCR2 = 500;
-                   TIM4->CCR3 = 900;
-                    Car_Left();
-                    HAL_Delay(100); // 회전 시간
-                    Car_Stop();
-                }
-                else if (distance_Right > distance_Left +10)
-                {
-                   TIM4->CCR2 = 900;
-                   TIM4->CCR3 = 500;
-                    Car_Right();
-                    HAL_Delay(100); // 회전 시간
-                    Car_Stop();
-                }
-
-            }
-
-            else
-            {
-                // 장애물 없음 → 전진
-
-                Car_Forward();
-
-                if (distance < 10 || (distance_Left < 10 || distance_Right < 10)) // 부딫히면 안돼!
-                {
-                  TIM4->CCR2 = 500;
-                  TIM4->CCR3 = 500;
-                  Car_Backward();
-
-                  if (distance_Left > distance_Right +10)
-                  {
-                     TIM4->CCR2 = 500;
-                     TIM4->CCR3 = 900;
-                      Car_Left();
-                      HAL_Delay(100); // 회전 시간
-                      Car_Stop();
-                  }
-                  else if (distance_Right > distance_Left +10)
-                  {
-                     TIM4->CCR2 = 900;
-                     TIM4->CCR3 = 500;
-                      Car_Right();
-                      HAL_Delay(100); // 회전 시간
-                      Car_Stop();
-                  }
-                }
-            }
-        }
 
 
 
@@ -418,6 +253,28 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1)
+  {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
